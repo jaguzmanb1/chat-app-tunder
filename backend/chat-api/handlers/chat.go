@@ -89,3 +89,8 @@ func (h *Chat) HandleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+//Test Handle a test for the webpage
+func (h *Chat) Test(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Test example"))
+}

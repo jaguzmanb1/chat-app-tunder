@@ -30,6 +30,7 @@ func main() {
 	// Router creationg
 	sm := mux.NewRouter()
 	sm.HandleFunc("/ws/{id:[0-9]+}", cha.HandleConnections)
+	sm.HandleFunc("/", cha.Test)
 
 	go cha.HandleMessages()
 
@@ -50,9 +51,9 @@ func main() {
 	go func() {
 		l.Debug("Starting server on", "port", os.Getenv("bindAddress"))
 
-		err := s.ListenAndServe()
+		err := s.ListenAndServeTLS("cert/server.crt", "cert/server.key")
 		if err != nil {
-			l.Error("Error starting server %s\n", err)
+			l.Error("Error starting server", "error", err)
 			os.Exit(1)
 		}
 	}()
