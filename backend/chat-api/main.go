@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go-chat/auth"
 	"go-chat/handlers"
 	"log"
 	"net/http"
@@ -25,16 +26,23 @@ func main() {
 		Level: hclog.LevelFromString("DEBUG"),
 	})
 
+	// Token validator handler
+	auth := auth.New(l)
+
 	cha := handlers.New(l)
 
 	// Router creationg
 	sm := mux.NewRouter()
-	sm.HandleFunc("/ws/{id:[0-9]+}", cha.HandleConnections)
-	sm.HandleFunc("/", cha.Test)
+
+	// Injecting authentication validation to mux router
+	sm.Use(auth.MiddlewareTokenValidation)
+
+	// Register handlers
+	getR := sm.Methods(http.MethodGet).Subrouter()
+	getR.HandleFunc("/ws/{id:[0-9]+}", cha.HandleConnections)
+	getR.HandleFunc("/", cha.Test)
 
 	go cha.HandleMessages()
-
-	//chatRouter := sm.Methods(http.MethodGet).Subrouter()
 
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))

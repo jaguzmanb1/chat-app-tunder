@@ -51,7 +51,6 @@ func (h *Chat) HandleMessages() {
 					u.WS.Close()
 				}
 			}
-
 		}
 	}
 }

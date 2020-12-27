@@ -1,4 +1,2 @@
 /.env
-/server.pem
-/server.key
 /cert/*
