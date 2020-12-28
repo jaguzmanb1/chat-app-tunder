@@ -8,7 +8,7 @@ import (
 
 //MiddlewareValidateUser  verificacion para los request
 func (h *Auth) MiddlewareValidateUser(next http.Handler) http.Handler {
-	h.l.Info("Handling validator middleware request")
+	h.l.Info("[MiddlewareValidateUser] Handling validator middleware request")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
@@ -17,16 +17,16 @@ func (h *Auth) MiddlewareValidateUser(next http.Handler) http.Handler {
 
 		err := data.FromJSON(user, r.Body)
 		if err != nil {
-			h.l.Error("deserializing product", "error", err)
+			h.l.Error("[MiddlewareValidateUser] Deserializing product", "error", err)
 
 			w.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&GenericError{Message: err.Error()}, w)
 			return
 		}
-		h.l.Debug("Serialized user", "user", user)
+		h.l.Debug("[MiddlewareValidateUser] Serialized user", "user", user)
 		errs := h.v.Validate(user)
 		if len(errs) != 0 {
-			h.l.Error("validating user", "errors:", errs)
+			h.l.Error("[MiddlewareValidateUser] Validating user", "errors:", errs)
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			data.ToJSON(&ValidationError{Messages: errs.Errors()}, w)
 			return
@@ -43,7 +43,7 @@ func (h *Auth) MiddlewareValidateUser(next http.Handler) http.Handler {
 
 //MiddlewareValidateUserSignin verificacion para los request
 func (h *Auth) MiddlewareValidateUserSignin(next http.Handler) http.Handler {
-	h.l.Info("Handling validator middleware request")
+	h.l.Info("[MiddlewareValidateUserSignin] Handling validator middleware request")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
@@ -52,16 +52,16 @@ func (h *Auth) MiddlewareValidateUserSignin(next http.Handler) http.Handler {
 
 		err := data.FromJSON(user, r.Body)
 		if err != nil {
-			h.l.Error("deserializing product", "error", err)
+			h.l.Error("[MiddlewareValidateUserSignin] Deserializing product", "error", err)
 
 			w.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&GenericError{Message: err.Error()}, w)
 			return
 		}
-		h.l.Debug("Serialized user", "user", user)
+		h.l.Debug("[MiddlewareValidateUserSignin] Serialized user", "phone", user.Phone)
 		errs := h.v.Validate(user)
 		if len(errs) != 0 {
-			h.l.Error("validating user", "errors:", errs)
+			h.l.Error("[MiddlewareValidateUserSignin] Validating user", "errors:", errs)
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			data.ToJSON(&ValidationError{Messages: errs.Errors()}, w)
 			return

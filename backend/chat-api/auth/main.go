@@ -2,7 +2,7 @@ package auth
 
 import (
 	"fmt"
-	"net/http"
+	"go-chat/data"
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
@@ -21,50 +21,36 @@ func New(l hclog.Logger) *Auth {
 	return &Auth{l}
 }
 
+// KeyClient usada para el middleware
+type KeyClient struct{}
+
 // ValidateToken validates a user request to be signed with a JWT token
-func (h *Auth) validateToken(t string) (bool, error) {
+func (h *Auth) validateToken(t string, l string) (bool, data.User, error) {
+	h.l.Info("[validateToken] Validating token")
+
 	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			h.l.Error("Unexpected signing method: %v", token.Header["alg"])
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("[validateToken] Unexpected signing method: %v", token.Header["alg"])
 		}
 
 		return signKey, nil
 	})
 
 	if err != nil {
-		return false, err
+		return false, data.User{}, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["authorized"], claims["user"], claims["exp"])
-		return true, nil
-	}
+		rol := claims["rol"].(float64)
+		phone := claims["phone"].(string)
 
-	return false, err
-
-}
-
-// MiddlewareTokenValidation validates resquests tokens
-func (h *Auth) MiddlewareTokenValidation(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header["Authorization"] != nil {
-			tv, err := h.validateToken(r.Header["Authorization"][0])
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				h.l.Error("Error parsing or validating request token", "error", err)
-
-				return
-			}
-
-			if tv {
-				next.ServeHTTP(w, r)
-				return
-			}
+		s := fmt.Sprintf("%.0f", rol)
+		if s == l {
+			return true, data.User{s, phone}, nil
 		}
 
-		w.WriteHeader(http.StatusUnauthorized)
-		h.l.Info("User request not autorized")
-		fmt.Fprintf(w, "User request not autorized")
-	})
+	}
+
+	return false, data.User{}, err
+
 }

@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"go-chat/auth"
+	"go-chat/data"
 	"go-chat/handlers"
+	"go-chat/server"
 	"log"
 	"net/http"
 	"os"
@@ -26,23 +28,34 @@ func main() {
 		Level: hclog.LevelFromString("DEBUG"),
 	})
 
-	// Token validator handler
-	auth := auth.New(l)
+	// Creating logers for each service
+	authLogger := l.Named("Auth")
+	chatLogger := l.Named("Chat")
+	serverLogger := l.Named("Server")
 
-	cha := handlers.New(l)
+	// Token validator handler
+	auth := auth.New(authLogger)
+
+	// Creates message broadcast channel
+	m := make(chan data.Message)
+
+	// Chat server to recieve messages
+	cs := *server.New(serverLogger, m)
+
+	// Chat http handler
+	cha := handlers.New(chatLogger, cs, m)
 
 	// Router creationg
 	sm := mux.NewRouter()
 
 	// Injecting authentication validation to mux router
-	sm.Use(auth.MiddlewareTokenValidation)
+	sm.Use(auth.MiddlewareTokenValidationSocket)
 
 	// Register handlers
 	getR := sm.Methods(http.MethodGet).Subrouter()
-	getR.HandleFunc("/ws/{id:[0-9]+}", cha.HandleConnections)
-	getR.HandleFunc("/", cha.Test)
+	getR.HandleFunc("/ws", cha.HandleConnections)
 
-	go cha.HandleMessages()
+	go cs.HandleMessages()
 
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
@@ -57,11 +70,11 @@ func main() {
 	}
 
 	go func() {
-		l.Debug("Starting server on", "port", os.Getenv("bindAddress"))
+		l.Debug("[main] Starting server on", "port", os.Getenv("bindAddress"))
 
 		err := s.ListenAndServeTLS("cert/server.crt", "cert/server.key")
 		if err != nil {
-			l.Error("Error starting server", "error", err)
+			l.Error("[main] Error starting server", "error", err)
 			os.Exit(1)
 		}
 	}()

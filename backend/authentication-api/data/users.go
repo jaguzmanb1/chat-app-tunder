@@ -91,7 +91,7 @@ func (s *UserService) GetUserByID(id int) (User, error) {
 
 //GetUserByPhone returns an user given an phone number
 func (s *UserService) GetUserByPhone(phone string) (UserSignin, error) {
-	s.l.Info("Getting user from database with", "phone", phone)
+	s.l.Info("[GetUserByPhone] Getting user from database with", "phone", phone)
 
 	user := UserSignin{}
 	rows, err := s.DB.Query("SELECT phone, password, rol FROM users WHERE phone = (?)", phone)
@@ -114,7 +114,7 @@ func (s *UserService) GetUserByPhone(phone string) (UserSignin, error) {
 
 //CreateUser crea un usuario
 func (s *UserService) CreateUser(pUser *UserCreate) error {
-	s.l.Info("Creating", "user", pUser)
+	s.l.Info("[CreateUser] Creating", "user", pUser)
 	saltedPassword, err := s.hashAndSalt([]byte(pUser.Password))
 	if err != nil {
 		return err

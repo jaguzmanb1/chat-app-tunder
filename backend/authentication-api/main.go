@@ -41,20 +41,23 @@ func main() {
 
 	l := hclog.New(&hclog.LoggerOptions{
 		Name:  "authentication-api",
-		Level: hclog.LevelFromString("DEBUG"),
-	})
+		Level: hclog.LevelFromString("DEBUG")})
+
+	// Creating logger for each service
+	dl := l.Named("Data")
+	al := l.Named("Auth")
 
 	// Validator object
 	v := data.NewValidation()
 
 	// Se crea servicio de usuario
-	us := data.New(db, l)
+	us := data.New(db, dl)
 
 	// Creating mux server to save handlers
 	sm := mux.NewRouter()
 
 	// Creating auth handler
-	ah := handlers.New(l, us, v)
+	ah := handlers.New(al, us, v)
 
 	// Subrouter to hanlde post requests
 	postR := sm.Methods(http.MethodPost).Subrouter()
@@ -66,7 +69,7 @@ func main() {
 	postSignR.Use(ah.MiddlewareValidateUserSignin)
 
 	// CORS
-	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"https://localhost:3000"}))
+	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
 
 	// New custom server
 	s := http.Server{
@@ -79,11 +82,11 @@ func main() {
 	}
 
 	go func() {
-		l.Debug("Starting server on", "port", os.Getenv("bindAddress"))
+		l.Debug("[main] Starting server on", "port", os.Getenv("bindAddress"))
 
 		err := s.ListenAndServeTLS("cert/server.crt", "cert/server.key")
 		if err != nil {
-			l.Error("Error starting server %s\n", err)
+			l.Error("[main] Error starting server %s\n", err)
 			os.Exit(1)
 		}
 	}()

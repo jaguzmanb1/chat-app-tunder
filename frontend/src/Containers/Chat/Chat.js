@@ -5,8 +5,8 @@ export default class Chat extends Component {
         super(props);
         this.state = {
             textMessage: '',
-            to: 0,
-            from: 0,
+            to: '',
+            from: '',
             connected: false
         }
 
@@ -27,29 +27,35 @@ export default class Chat extends Component {
 
     handleToChange(event) {
         this.setState({
-            to: parseInt(event.target.value)
+            to: event.target.value
         })
     }
 
     handleFromChange(event) {
         this.setState({
-            from: parseInt(event.target.value)
+            from: event.target.value
         })
     }
 
     sendMessage(){
         this.ws.send(JSON.stringify({
             "to": this.state.to,
-            "from": this.state.from,
+            "from": localStorage.setItem('phone', this.state.phoneNumber),
             "message": this.state.textMessage
         }))
     }
 
+
+
     makeConnect () {
-        this.ws = new WebSocket('ws://localhost:3030/ws/' + this.state.from)
+        this.ws = new WebSocket('wss://localhost:3030/ws')
 
         this.ws.onopen = () => {
             // on connecting, do nothing but log it to the console
+            this.ws.send(JSON.stringify({
+                "message": localStorage.getItem('token')
+
+            }))
             console.log('connected')
             this.setState( {
                 connected: true
