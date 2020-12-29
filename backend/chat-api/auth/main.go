@@ -18,6 +18,8 @@ type Auth struct {
 
 // New creates a new auth validator instance
 func New(l hclog.Logger) *Auth {
+	l.Debug("[New] Creating new auth instance")
+
 	return &Auth{l}
 }
 

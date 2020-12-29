@@ -1,4 +1,8 @@
 import React, { Component } from 'react';
+import 'react-chat-elements/dist/main.css';
+// MessageBox component
+import { MessageBox } from 'react-chat-elements';
+import { ChatItem } from 'react-chat-elements'
 
 export default class Chat extends Component {
     constructor(props){
@@ -81,26 +85,33 @@ export default class Chat extends Component {
 
     render () {
         return (
-            (this.state.connected ? 
 
             <div>
-                <p>Chat works</p>
-                To 
-                <input type="text" value={this.state.to} onChange={this.handleToChange} />
+                <div class="row">
+                    <div class="col-4" 
+                    style={{
+                        paddingRight: 0
+                    }} >
+                        <ChatItem
+                            avatar={'https://upload.wikimedia.org/wikipedia/commons/7/7c/User_font_awesome.svg'}
+                            alt={'Reactjs'}
+                            title={'Facebook'}
+                            subtitle={'What are you doing?'}
+                            date={new Date()}
+                            unread={0} 
+                        />
+                    </div>
+                    <div class="col-8" 
+                    style={{
+                        paddingLeft: 0
+                    }}>
 
-                Message 
-                <input type="text" value={this.state.textMessage} onChange={this.handleTextMessageChange} />
-
-                <button onClick={this.sendMessage}> Enviar </button>
-            </div> 
-            : 
-            <div>
-                From 
-                <input type="text" value={this.state.from} onChange={this.handleFromChange} />
-                <button onClick={this.makeConnect}> Connect </button>
-
+                    </div>
+                    
+                </div>
             </div>
-            )
+
+
             
         )
     }

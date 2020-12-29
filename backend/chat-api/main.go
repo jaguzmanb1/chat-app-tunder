@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"github.com/joho/godotenv"
+	elastic "github.com/olivere/elastic/v7"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -28,10 +29,24 @@ func main() {
 		Level: hclog.LevelFromString("DEBUG"),
 	})
 
+	es, err := elastic.NewClient(
+		elastic.SetURL(os.Getenv("esEndpoint")),
+		elastic.SetBasicAuth(os.Getenv("userEs"), os.Getenv("userPas")),
+		elastic.SetSniff(false),
+		elastic.SetHealthcheck(false))
+
+	if err != nil {
+		l.Error("[main] Creating new elasticsearch client", "error", err)
+	}
+
 	// Creating logers for each service
 	authLogger := l.Named("Auth")
 	chatLogger := l.Named("Chat")
 	serverLogger := l.Named("Server")
+	messageService := l.Named("MessagesService")
+
+	//Creates a new messages service
+	ms := *data.New(es, messageService)
 
 	// Token validator handler
 	auth := auth.New(authLogger)
@@ -43,17 +58,20 @@ func main() {
 	cs := *server.New(serverLogger, m)
 
 	// Chat http handler
-	cha := handlers.New(chatLogger, cs, m)
+	cha := handlers.New(chatLogger, cs, m, ms)
 
 	// Router creationg
 	sm := mux.NewRouter()
 
 	// Injecting authentication validation to mux router
-	sm.Use(auth.MiddlewareTokenValidationSocket)
 
 	// Register handlers
 	getR := sm.Methods(http.MethodGet).Subrouter()
 	getR.HandleFunc("/ws", cha.HandleConnections)
+	getR.Use(auth.MiddlewareTokenValidationSocket)
+
+	getRN := sm.Methods(http.MethodGet).Subrouter()
+	getRN.HandleFunc("/messages/{phone:[0-9]+}", cha.GetMessagesFromUser)
 
 	go cs.HandleMessages()
 

@@ -17,6 +17,7 @@ type Client struct {
 
 // New creates a new client instance
 func New(l hclog.Logger, ws *websocket.Conn, b chan data.Message, us data.User) *Client {
+	l.Debug("[New] Creating new client to", "phone", us.Phone)
 	return &Client{l, ws, b, us}
 }
 

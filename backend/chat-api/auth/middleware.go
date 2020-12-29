@@ -20,7 +20,7 @@ func (h *Auth) MiddlewareTokenValidationRol0(next http.Handler) http.Handler {
 			tv, _, err := h.validateToken(r.Header["Authorization"][0], "0")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				h.l.Error("[MiddlewareTokenValidationRol0] Error parsing or validating request token", "error", err)
+				h.l.Error("[MiddlewareTokenValidationRol1] Error parsing or validating request token", "error", err, "endpoint", r.URL)
 				return
 			}
 
@@ -45,7 +45,7 @@ func (h *Auth) MiddlewareTokenValidationRol1(next http.Handler) http.Handler {
 			tv, _, err := h.validateToken(r.Header["Authorization"][0], "1")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				h.l.Error("[MiddlewareTokenValidationRol1] Error parsing or validating request token", "error", err)
+				h.l.Error("[MiddlewareTokenValidationRol1] Error parsing or validating request token", "error", err, "endpoint", r.URL)
 
 				return
 			}
