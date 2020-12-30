@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"reflect"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	elastic "github.com/olivere/elastic/v7"
@@ -10,9 +11,10 @@ import (
 
 // Message structure that describes a message on the chat
 type Message struct {
-	To      string `json:"to"`
-	From    string `json:"from"`
-	Message string `json:"message"`
+	To      string    `json:"to"`
+	From    string    `json:"from"`
+	Message string    `json:"message"`
+	Date    time.Time `json:"date"`
 }
 
 // Messages it's a collection of messages
@@ -44,14 +46,15 @@ func returnMessagesArray(sr *elastic.SearchResult) []Message {
 }
 
 // GetMessages returns cluster info data
-func (m *MessageService) GetMessages(from string) ([]Message, error) {
+func (m *MessageService) GetMessages(to string) ([]Message, error) {
 	ctx := context.Background()
-	termQuery := elastic.NewTermQuery("from", from)
+	termQuery := elastic.NewTermQuery("to", to)
 	rs, err := m.cl.Search().
 		Index("test-messages"). // search in index "twitter"
 		Query(termQuery).       // specify the query
 		From(0).Size(10).       // take documents 0-9
-		Pretty(true).           // pretty print request and response JSON
+		Pretty(true).           // pretty print request and response JSON.
+		Sort("date", true).
 		Do(ctx)
 
 	if err != nil {

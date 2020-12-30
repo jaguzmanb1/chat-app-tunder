@@ -30,6 +30,17 @@ func (c *Client) SendMessage(m string) error {
 	return nil
 }
 
+// SendJSON sends a message to this client
+func (c *Client) SendJSON(i interface{}) error {
+	c.l.Info("[SendJSON] Sending messages data to user", "phone", c.US.Phone)
+
+	err := c.ws.WriteJSON(i)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // HandleConnection handles a client connection to the server
 func (c *Client) HandleConnection() error {
 	for {

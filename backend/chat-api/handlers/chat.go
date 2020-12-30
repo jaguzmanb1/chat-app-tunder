@@ -54,6 +54,15 @@ func (h *Chat) HandleConnections(w http.ResponseWriter, r *http.Request) {
 	ws.SetReadDeadline(time.Time{})
 
 	c := client.New(h.l, ws, h.b, us)
+
+	m, err := h.ms.GetMessages(us.Phone)
+	if err != nil {
+		data.ToJSON(&GenericError{Message: err.Error()}, w)
+		h.l.Error("[HandleConnections] Can't send persisted messages", "error", err)
+
+	}
+
+	c.SendJSON(m)
 	h.s.AddCurrentClient(c)
 
 	c.HandleConnection()
@@ -66,5 +75,5 @@ func (h *Chat) GetMessagesFromUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data.ToJSON(&GenericError{Message: err.Error()}, w)
 	}
-	data.ToJSON(&data.Messages{Messages: messages}, w)
+	data.ToJSON(messages, w)
 }
